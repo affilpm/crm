@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HighLevel CRM Integration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .status-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+        .status-card.connected {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        .status-card.error {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            margin: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        .btn-success:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+        }
+        .btn-secondary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(108, 117, 125, 0.3);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .step {
+            background: #e9ecef;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border-left: 4px solid #667eea;
+            text-align: left;
+        }
+        .step h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        .response-area {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border-left: 4px solid #28a745;
+            display: none;
+        }
+        .info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            text-align: left;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 HighLevel CRM Integration</h1>
+        
+        <div class="status-card" id="statusCard">
+            <h3>Status: <span id="connectionStatus">Checking...</span></h3>
+            <p id="statusMessage">Checking connection...</p>
+        </div>
+
+        <div class="step">
+            <h3>📋 Task Details</h3>
+            <div class="info">
+                <strong>Custom Field:</strong> DFS Booking Zoom Link<br>
+                <strong>Update Value:</strong> TEST
+            </div>
+        </div>
+        
+        <div class="step">
+            <h3>🔗 Step 1: Connect to HighLevel</h3>
+            <p>Authorize access to your HighLevel account</p>
+            <a href="/connect/" class="btn btn-primary" id="connectBtn">Connect to HighLevel</a>
+            <button class="btn btn-secondary" id="logoutBtn" onclick="logout()" style="display: none;">Logout</button>
+        </div>
+        
+        <div class="step">
+            <h3>🎯 Step 2: Update Random Contact</h3>
+            <p>Update a random contact's custom field</p>
+            <button class="btn btn-success" id="updateBtn" onclick="updateContact()" disabled>
+                <span id="updateBtnText">Update Contact</span>
+            </button>
+        </div>
+        
+        <div id="responseArea" class="response-area" style="display: none;"></div>
+        <div id="successMessage" class="success-message">
+            <h3>✅ Success!</h3>
+            <p>Contact updated successfully with custom field value "TEST".</p>
+        </div>
+    </div>
+
+    <script>
+        let isConnected = false;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            checkStatus();
+            handleOAuthCallback();
+        });
+
+        function checkStatus() {
+            fetch('/status/')
+                .then(response => response.json())
+                .then(data => updateUI(data))
+                .catch(() => updateUI({ connected: false, error: 'Status check failed' }));
+        }
+
+        function updateUI(data) {
+            const statusCard = document.getElementById('statusCard');
+            const statusMessage = document.getElementById('statusMessage');
+            const connectionStatus = document.getElementById('connectionStatus');
+            const updateBtn = document.getElementById('updateBtn');
+            const connectBtn = document.getElementById('connectBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            isConnected = data.connected && !data.reconnect_required;
+
+            if (isConnected) {
+                statusCard.className = 'status-card connected';
+                connectionStatus.textContent = 'Connected';
+                statusMessage.textContent = '✅ Successfully connected to HighLevel!';
+                
+                updateBtn.disabled = false;
+                
+                // Show logout button and hide/disable connect button
+                connectBtn.style.display = 'none';
+                logoutBtn.style.display = 'inline-block';
+            } else {
+                statusCard.className = 'status-card' + (data.error ? ' error' : '');
+                connectionStatus.textContent = data.error ? 'Error' : 'Not Connected';
+                statusMessage.innerHTML = data.error ? 
+                    `❌ ${data.error}${data.reconnect_required ? ' Please reconnect.' : ''}` : 
+                    'Click "Connect to HighLevel" to start';
+                
+                // Disable update button when connection is disrupted
+                updateBtn.disabled = true;
+                const updateBtnText = document.getElementById('updateBtnText');
+                updateBtnText.textContent = 'Update Contact';
+                
+                // Show connect button and hide logout button
+                connectBtn.style.display = 'inline-block';
+                connectBtn.disabled = false;
+                connectBtn.textContent = 'Connect to HighLevel';
+                connectBtn.classList.remove('btn-success');
+                connectBtn.classList.add('btn-primary');
+                connectBtn.style.pointerEvents = 'auto';
+                logoutBtn.style.display = 'none';
+            }
+        }
+
+        function handleOAuthCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            
+            if (code && !isConnected) {
+                updateConnectionStatus('Connecting...');
+                
+                fetch(`/callback/?code=${code}`)
+                    .then(response => {
+                        if (response.redirected) {
+                            window.location.href = response.url;
+                            return;
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data?.error) throw new Error(data.error);
+                        checkStatus();
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    })
+                    .catch(error => {
+                        updateConnectionStatus(`Connection failed: ${error.message}`, true);
+                    });
+            }
+        }
+
+        function updateConnectionStatus(message, isError = false) {
+            const statusCard = document.getElementById('statusCard');
+            const statusMessage = document.getElementById('statusMessage');
+            const connectionStatus = document.getElementById('connectionStatus');
+
+            statusCard.className = 'status-card' + (isError ? ' error' : '');
+            connectionStatus.textContent = isError ? 'Error' : 'Connecting...';
+            statusMessage.innerHTML = isError ? `❌ ${message}` : `<div class="loading"></div>${message}`;
+        }
+
+        function updateContact() {
+            // Check connection before proceeding
+            if (!isConnected) {
+                alert('Connection lost. Please reconnect to HighLevel.');
+                checkStatus();
+                return;
+            }
+
+            const updateBtn = document.getElementById('updateBtn');
+            const updateBtnText = document.getElementById('updateBtnText');
+            const responseArea = document.getElementById('responseArea');
+            const successMessage = document.getElementById('successMessage');
+
+            updateBtn.disabled = true;
+            updateBtnText.innerHTML = '<div class="loading"></div>Updating...';
+            responseArea.style.display = 'block';
+            responseArea.textContent = 'Making API request...';
+            successMessage.style.display = 'none';
+
+            fetch('/update-random/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                responseArea.textContent = JSON.stringify(data, null, 2);
+                
+                if (data.message?.includes('success')) {
+                    updateBtnText.textContent = '✅ Updated!';
+                    successMessage.style.display = 'block';
+                    successMessage.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    throw new Error(data.error || 'Update failed');
+                }
+            })
+            .catch(error => {
+                responseArea.textContent = `Error: ${error.message}`;
+                updateBtnText.textContent = 'Update Failed';
+                updateBtn.disabled = false;
+                
+                // If connection error, disable update button and show connection error
+                if (error.message.includes('connection') || error.message.includes('token')) {
+                    isConnected = false;
+                    updateBtn.disabled = true;
+                }
+                
+                checkStatus(); // Recheck connection on error
+            });
+        }
+
+        function logout() {
+            if (!confirm('Are you sure you want to logout from HighLevel?')) {
+                return;
+            }
+
+            fetch('/logout/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    isConnected = false;
+                    
+                    // Clear any displayed data
+                    document.getElementById('responseArea').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'none';
+                    
+                    // Update UI to show disconnected state
+                    updateUI({ connected: false, message: 'Logged out successfully' });
+                } else {
+                    alert('Logout failed. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                alert('Logout failed. Please try again.');
+            });
+        }
+
+        function getCookie(name) {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [key, value] = cookie.trim().split('=');
+                if (key === name) return decodeURIComponent(value);
+            }
+            return null;
+        }
+    </script>
+</body>
+</html>
